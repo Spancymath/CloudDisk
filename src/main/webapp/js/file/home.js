@@ -56,7 +56,6 @@ $(document).ready(function () {
         swf: '../thirdParty/Uploader.swf',
         // 文件接收服务端。  // 需要修改为你的后端地址
         server: 'fileAction_webUpload',
-        // dnd 指定Drag And Drop拖拽的容器，如果不指定，则不启动
         // 禁用全局拖拽，否则在没有启动拖拽容器的情况下，视频拖进来后会直接在浏览器内播放。
         disableGlobalDnd: true,
 
@@ -66,22 +65,6 @@ $(document).ready(function () {
             innerHTML: '选择文件',   // 按钮上显示的文字
             multiple: false                  // 多文件选择
         },
-
-        // 允许视频和图片类型的文件上传。
-        // accept: {
-        //     title: 'Video',
-        //     extensions: 'mp4,gif,jpg,jpeg,bmp,png',      // 可以多个后缀，以逗号分隔， 不要有空格
-        //     mimeTypes: 'video/*,image/*'
-        // },
-
-        // 只允许选择图片文件。
-        //accept: {
-        // title: 'Images',
-        //  extensions: '',
-        //  mimeTypes: ''
-        //}
-
-        // thumb配置生成缩略图的选项， 此项交由后台完成， 所以前台未配置
 
         // 自动上传暂时关闭，使用多文件队列上传， 如果值为true，那么在选择完文件后，将直接开始上传文件，因为我还要做一些其他处理，故选择false。
         auto: false,
@@ -130,28 +113,8 @@ $(document).ready(function () {
     // 当有文件被添加进队列的时候触发，用于显示加载进度条
     uploader.on( 'fileQueued', function( file ) {
         $(".uploader-list").css("visibility", "visible");
-        // $list.append( '<div style="position: relative; font-size: 12px;" id="' + file.id + '" class="item">' +
-        //     '<p class="info">' + file.name + '</p>' +
-        //     '<p class="state">正在加载...</p>' +
-        //     '</div>' );
+
         var $li = $('.uploader-list>div');
-        // var $li = $( '#'+file.id );
-        // // 生成文件的MD5值， 可以用来实现秒传， 如不需要，可以忽略（数据库中保存md5值，如果存在相同md5，直接在文件服务器复制一份，不需再次分片上传以及合并，极快）
-        // uploader.md5File( file )
-        // // 及时显示进度
-        //     .progress(function(percentage) {
-        //         $percent = $li.find('.state');
-        //         $li.find('p.state').text('加载中 '+  Math.round(percentage * 100)  + '%');
-        //         console.log('Percentage:', percentage);
-        //     })
-        //     // 完成
-        //     .then(function(md5) {
-        //         // 将md5值加入到post的表单数据formData中， 与上文中的 context 和 from字段相同
-        //         uploader.option("formData",{
-        //             "md5": md5
-        //     });
-        //     console.log('md5:', md5);
-        // });
         $li.find('p.info').text(file.name);
         $li.find('p.state').text("加载完成，请上传").css( 'background-size', '0');
     });
@@ -162,19 +125,11 @@ $(document).ready(function () {
         var $li = $('.uploader-list>div'),
             $percent = $li.find('p.state');
 
-        // 避免重复创建
-        // if ( !$percent.length ) {
-        //     $percent = $('<div class="progress progress-striped active">' +
-        //         '<div class="progress-bar" role="progressbar" style="width: 0%">' +
-        //         '</div>' +
-        //         '</div>').appendTo( $li ).find('.progress-bar');
-        // }
-
         $li.find('p.state').text('上传中 '+ Math.round(percentage * 100)  + '%' );
         if(Math.round(percentage * 100) == 100)
         {
             $li.find('p.state').text('即将完成...');
-            //100的时候背景还没被填满
+            //100的时候背景还没被填满，设为101可以
             percentage = 101;
         }
 
@@ -314,7 +269,7 @@ function download() {
         download();
     }
 }
-
+//合并下载的分片文件
 function mergeToFile(type) {
     console.log("合并分片文件");
     var blob = new Blob(blobArray, {type: type})
@@ -344,6 +299,7 @@ function mergeToFile(type) {
     }, 100);
 }
 
+//清空下载时设置的缓存变量
 function clearDownloadVar() {
     downloading = false;
     path = "";//存储路径
